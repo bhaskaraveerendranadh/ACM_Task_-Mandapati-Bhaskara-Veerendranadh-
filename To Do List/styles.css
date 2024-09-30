@@ -1,0 +1,21 @@
+/* Login.module.css */
+body {
+    background-color: beige;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Ensure the container takes the full viewport height */
+  }
+  
+  .box {
+    background: linear-gradient(120deg, #2af598, #009efd);
+    padding: 2rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    width: 100%; /* Make sure it doesn't stretch too much */
+    max-width: 500px; /* Set a maximum width */
+  }
+  

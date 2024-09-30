@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
+    <style>
+        .completed-task {
+            background-color: #c3e6cb; /* Green */
+        }
+        .sortable-item {
+            cursor: grab;
+        }
+        body {
+            font-family: 'Caveat', cursive; /* Apply the Caveat font to the body */
+            background-color: lemonchiffon; /* Light pastel purple background color */
+            color: #333;
+            font-size: x-large;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Task Manager</h2>
+        <div id="taskList" class="list-group"></div>
+        
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Function to create task HTML
+            function createTaskHTML(category, name, startTime, endTime, progress, status) {
+                var taskItem = `
+                    <div class="card mt-3 sortable-item">
+                        <div class="card-body">
+                            <h5 class="card-title">${name}</h5>
+                            <p class="card-text">Category: ${category}</p>
+                            <p class="card-text">Start Time: ${startTime}</p>
+                            <p class="card-text">End Time: ${endTime}</p>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: ${progress}%;" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="mt-2">
+                                <input type="radio" name="taskProgress" value="0"> 0% Done
+                                <input type="radio" name="taskProgress" value="25"> 25% Done
+                                <input type="radio" name="taskProgress" value="50"> 50% Done
+                                <input type="radio" name="taskProgress" value="75"> 75% Done
+                                <input type="radio" name="taskProgress" value="100"> 100% Done
+                            </div>
+                            <p>Status: <span class="status">${status}</span></p>
+                            <button class="btn btn-danger delete-task">Delete</button>
+                        </div>
+                    </div>
+                `;
+                return taskItem;
+            }
+
+            // Function to display tasks from localStorage
+            function displayTasks() {
+                var tasks = JSON.parse(localStorage.getItem('tasks'));
+                if (tasks && tasks.length > 0) {
+                    tasks.forEach(function(task) {
+                        var taskItem = createTaskHTML(task.category, task.name, task.startTime, task.endTime, task.progress, task.status);
+                        $('#taskList').append(taskItem);
+                    });
+                } else {
+                    alert('No tasks found!');
+                }
+            }
+
+            // Function to update status text color for completed tasks
+            function updateStatusTextColor() {
+                $('.status').each(function() {
+                    if ($(this).text() === "Complete") {
+                        $(this).addClass('text-success');
+                    }
+                });
+            }
+
+            // Update progress bar and status when radio button is clicked
+            $(document).on('change', 'input[name="taskProgress"]', function(){
+                var progressValue = $(this).val();
+                var progressBar = $(this).closest('.card').find('.progress-bar');
+                progressBar.width(progressValue + '%');
+                progressBar.attr('aria-valuenow', progressValue);
+
+                // Update status to "Complete" if progress is 100%
+                if (progressValue == 100) {
+                    $(this).closest('.card').find('.status').text('Complete').addClass('text-success');
+                } else {
+                    $(this).closest('.card').find('.status').text('Incomplete').removeClass('text-success');
+                }
+
+                // Update progress value in localStorage
+                var taskIndex = $(this).closest('.card').index();
+                var tasks = JSON.parse(localStorage.getItem('tasks'));
+                tasks[taskIndex].progress = progressValue;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            });
+
+            // Delete task when delete button is clicked
+            $(document).on('click', '.delete-task', function(){
+                $(this).closest('.card').remove();
+                var taskIndex = $(this).closest('.card').index();
+                var tasks = JSON.parse(localStorage.getItem('tasks'));
+                tasks.splice(taskIndex, 1);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            });
+
+            // Add task form submit event
+            $('#taskForm').submit(function(e){
+                e.preventDefault();
+                var category = $('#taskCategory').val();
+                var name = $('#taskName').val();
+                var startTime = $('#startTime').val();
+                var endTime = $('#endTime').val();
+                var progress = 50; // Default progress
+                var status = "Incomplete"; // Default status
+
+                // Create task data object
+                var taskData = {
+                    category: category,
+                    name: name,
+                    startTime: startTime,
+                    endTime: endTime,
+                    progress: progress,
+                    status: status
+                };
+
+                // Retrieve existing tasks from localStorage or initialize an empty array
+                var tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+                // Push the new task data into the tasks array
+                tasks.push(taskData);
+
+                // Save the updated tasks array back to localStorage
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+
+                // Display the added task
+                var taskItem = createTaskHTML(category, name, startTime, endTime, progress, status);
+                $('#taskList').append(taskItem);
+
+                // Update status text color for completed tasks
+                updateStatusTextColor();
+
+                // Clear form fields
+                $('#taskForm')[0].reset();
+
+                alert('Task added successfully!');
+            });
+
+            // Display tasks when the page loads
+            displayTasks();
+
+            // Make the task list sortable
+            $('#taskList').sortable({
+                axis: 'y'
+            });
+        });
+    </script>
+</body>
+</html>
